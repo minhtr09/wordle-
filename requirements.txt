@@ -1,0 +1,4 @@
+tqdm
+numpy
+english_words
+requests
