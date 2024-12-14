@@ -23,13 +23,23 @@
   - Repeat until correct word found
 - More efficient approach using information theory
   - Significantly reduces number of guesses needed
-  - Time complexity is `O(n^2*pattern_count)` where `n` is the number of words in the word list, `pattern_count` is the number of possible patterns for a word of length `text_size` could be `3^text_size`
+  - Time complexity is `O(g*n^2*3^text_size)` where `g` is the number of guesses, `n` is the number of words in the word list, `3^text_size` is the number of possible patterns for a word of length `text_size`
+
+### V3 (wordlev3.py)
+
+- The same as V2 but change the way to calculate entropy for faster entropy calculation
+- Time complexity is `O(g*n^2*text_size^2)` where `g` is the number of guesses, `n` is the number of words in the word list, `text_size` is the length of the word
+
+Notice:
+
+- V1 always find the correct word
+- V2 and V3 are not 100% accurate because word list is not always contain the word need to be solved
 
 ## How to Run
 
 1. Clone the repository
 2. Install dependencies: `pip install -r requirements.txt`
-3. Run the solver: `python wordleV1.py` or `python wordleV2.py`
+3. Run the solver: `python wordleV1.py` or `python wordleV2.py` or `python wordlev3.py`
 
 By default, the solver will:
 
@@ -46,17 +56,19 @@ By default, the solver will:
 
 ## Configuration
 
-You can modify these parameters in the main section of `wordleV1.py` and `wordleV2.py`:
+You can modify these parameters in `constants.py`:
 
 - `num_rounds`: Number of test rounds (default: 10)
 - `text_size`: Word length to solve (default: 5, max: 22)
 
 ## Performance
 
+For accuracy, I run 20 rounds for each version with the same seed to make sure the word need to be solved is the same.
 | Version | Total Execution Time | Average Time per Game | Average Guesses | Min Guesses | Max Guesses | Total API Requests |
 | ------- | -------------------- | --------------------- | --------------- | ----------- | ----------- | ------------------ |
-| V1      | 34.49 seconds        | 3.45 seconds          | 17.00           | 10          | 24          | 170                |
-| V2      | 444.53 seconds       | 63.50 seconds         | 4.29            | 3           | 5           | 30                 |
+| V1 | 50.44 seconds | 2.52 seconds | 17.50 | 8 | 26 | 350 |
+| V2 | 971.86 seconds | 48.59 seconds | 4.90 | 3 | 8 | 98 |
+| V3 | 29.41 seconds | 1.47 seconds | 4.65 | 2 | 9 | 93 |
 
 ## References
 
@@ -67,5 +79,5 @@ You can modify these parameters in the main section of `wordleV1.py` and `wordle
 ## Improvement
 
 - Add Pattern Caching to improve performance
-- Optimize Entropy Calculation using numpy
+- Optimize Entropy Calculation
 - Using Word Frequency Weighting

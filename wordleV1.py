@@ -3,27 +3,27 @@ import random
 from tqdm import tqdm
 from math import log
 from english_words import get_english_words_set
-import numpy as np
 import time 
 from itertools import product
+from constants import num_rounds, text_size, seeds
 
 
 LETTER_FREQUENCY_ORDER = "etaonrishdlfcmugypwbvkjxzq"
 CORRECT, PRESENT, ABSENT = "correct", "present", "absent"
 GUESS_COUNT = 0
 
-def try_guess(guess: str, text_size: int) -> list:
+def try_guess(guess: str, text_size: int, seed: int) -> list:
   # Add counter
   global GUESS_COUNT
   GUESS_COUNT += 1
   # get the pattern return from the API
-  query = f"https://wordle.votee.dev:8000/random?guess={guess}&seed={SEED}&size={text_size}"
+  query = f"https://wordle.votee.dev:8000/random?guess={guess}&seed={seed}&size={text_size}"
   r = requests.get(query)
   result = [check["result"] for check in r.json()]
   return result
 
 
-def solve_wordle(text_size: int) -> str:
+def solve_wordle(text_size: int, seed: int) -> tuple[str, int]:
   # Reset counter at start of each solve
   global GUESS_COUNT
   GUESS_COUNT = 0
@@ -32,7 +32,7 @@ def solve_wordle(text_size: int) -> str:
     if len(correct_letter_list) == text_size:
       break
     guess = letter * text_size
-    pattern = try_guess(guess, text_size)
+    pattern = try_guess(guess, text_size, seed)
 
     for i, result in enumerate(pattern):
         if result == CORRECT:
@@ -47,38 +47,31 @@ def solve_wordle(text_size: int) -> str:
 def is_correct_word(pattern: list) -> bool:
   return set(pattern) == set(["correct"])    
 
-
 if __name__ == "__main__":
     total_guesses = 0
-    num_rounds = 10 # Set number of rounds to test
-    text_size = 5     # Set word length
     not_found = 0
     print(f"Testing Wordle solver for {num_rounds} rounds with {text_size}-letter words...")
     
     results = []
-    start_time = time.time()
-    for round in range(num_rounds):
+    times = []
+    current_round = 0
+    while current_round < num_rounds:
         # Generate new random seed for each round
-        global SEED
-        SEED = random.randint(0, 1000000)
+        seed = seeds[current_round]
+        start_time = time.time()
+        word_ans, guesses = solve_wordle(text_size,seed)
+        end_time = time.time()
 
-        word_ans, guesses = solve_wordle(text_size)
-        pattern = try_guess(word_ans, text_size)
-        if is_correct_word(pattern):
-          print(f"Round {round+1} result: {word_ans}, guesses: {guesses}")
-        else:
-          print(f"Round {round+1} wrong guess, guesses: {guesses}")
-        
-        if word_ans == "NO_SOLUTION_FOUND": 
-          not_found += 1
-          continue
+        print(f"Round {current_round} result: {word_ans}, guesses: {guesses}, seed: {seed}")
         total_guesses += guesses
         results.append(guesses)
+        times.append(end_time - start_time)
+        current_round += 1
 
-    total_time = time.time() - start_time
-        
+    # Calculate total execution time
+    total_time = sum(times)
+    
     # Calculate statistics
-    num_rounds = num_rounds - not_found
     avg_guesses = total_guesses / num_rounds
     min_guesses = min(results)
     max_guesses = max(results)
